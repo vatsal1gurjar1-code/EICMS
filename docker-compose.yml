@@ -1,0 +1,98 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — EICMS Development Environment
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# HOW THIS WORKS:
+#   This file tells Docker to run 3 containers (services) together:
+#     1. db       — PostgreSQL database (stores all data)
+#     2. backend  — FastAPI Python server (handles all API requests)
+#     3. frontend — React/Vite app (the website users see)
+#
+# HOW TO START:  docker compose up
+# HOW TO STOP:   docker compose down
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── 1. Database (PostgreSQL) ────────────────────────────────────────────────
+  # Uses the official PostgreSQL 16 image from Docker Hub.
+  # Data is stored in a "volume" so it persists even when the container stops.
+  db:
+    image: postgres:16-alpine
+    container_name: eicms_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      # This saves the database data on your computer even after container stops
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # You can connect to the database on your computer at localhost:5432
+      # Useful for inspecting data with a tool like DBeaver or pgAdmin
+      - "5432:5432"
+    healthcheck:
+      # Docker waits for the database to be READY before starting the backend
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 2. Backend (FastAPI) ────────────────────────────────────────────────────
+  # Builds from the backend/Dockerfile.
+  # Any change to a Python file automatically reloads the server.
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eicms_backend
+    restart: unless-stopped
+    env_file:
+      # Loads all variables from your .env file
+      - .env
+    volumes:
+      # This maps your local backend/ folder into the container.
+      # Any code changes you make are immediately reflected — no rebuild needed.
+      - ./backend:/app
+    ports:
+      # API is available at http://localhost:8000
+      # Swagger docs at http://localhost:8000/docs
+      - "8000:8000"
+    depends_on:
+      db:
+        # Backend only starts AFTER the database passes its health check
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    #         ↑ Run migrations first, then start the server with auto-reload
+
+  # ── 3. Frontend (React + Vite) ──────────────────────────────────────────────
+  # Builds from the frontend/Dockerfile.
+  # Vite's dev server watches for file changes and hot-reloads the browser.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eicms_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    volumes:
+      # Maps your local frontend/ folder into the container
+      - ./frontend:/app
+      # This prevents the container's node_modules from being overwritten
+      # by your local folder (they may differ between Windows and Linux)
+      - /app/node_modules
+    ports:
+      # Website is available at http://localhost:5173
+      - "5173:5173"
+    depends_on:
+      - backend
+
+# ── Volumes ──────────────────────────────────────────────────────────────────
+# Named volumes are managed by Docker and persist between container restarts.
+volumes:
+  postgres_data:
+    # To delete all data and start fresh: docker compose down -v
