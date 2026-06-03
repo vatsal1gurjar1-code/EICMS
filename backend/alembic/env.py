@@ -23,7 +23,8 @@ import app.models  # This triggers all model imports via __init__.py
 config = context.config
 
 # Override the database URL from environment (not from alembic.ini directly)
-config.set_main_option("sqlalchemy.url", settings.database_url)
+db_url = settings.database_url.replace("%", "%%")
+config.set_main_option("sqlalchemy.url", db_url)
 
 # Setup Python logging from alembic.ini
 if config.config_file_name is not None:

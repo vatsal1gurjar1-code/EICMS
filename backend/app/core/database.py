@@ -25,6 +25,7 @@ ROW-LEVEL SECURITY (RLS):
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.pool import NullPool
 from app.core.config import settings
 
 
@@ -34,8 +35,8 @@ from app.core.config import settings
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
-    pool_size=10,        # Max 10 simultaneous connections in the pool
-    max_overflow=20,     # Allow up to 20 extra connections when the pool is full
+    pool_size=5,
+    max_overflow=10,
 )
 
 
