@@ -33,7 +33,7 @@ export default function AdminInventory() {
       setLoading(true)
       try {
         const res = await api.get(`/api/inventory/${selectedPo}`)
-        setInventory(res.data)
+        setInventory(res.data.items || [])
       } catch (err) {
         console.error(err)
       } finally {

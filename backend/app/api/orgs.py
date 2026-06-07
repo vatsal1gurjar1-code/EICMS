@@ -68,10 +68,26 @@ def create_organisation(
     db.add(admin_user)
     
     db.commit()
+    db.commit()
     db.refresh(org)
     return {"id": str(org.id), "name": org.name, "created_at": org.created_at}
 
-
+@router.get("")
+def list_organisations(current_user=Depends(require_role("super_admin")), db: Session = Depends(get_db)):
+    """Super Admin gets all organisations."""
+    orgs = db.query(Organisation).all()
+    result = []
+    for o in orgs:
+        admin = db.query(User).filter(User.org_id == o.id, User.role == UserRole.ORG_ADMIN).first()
+        result.append({
+            "id": str(o.id),
+            "name": o.name,
+            "created_at": o.created_at,
+            "admin_name": admin.full_name if admin else "N/A",
+            "admin_email": admin.email if admin else "N/A",
+            "is_active": o.is_active
+        })
+    return result
 @router.get("/users")
 def list_users(
     current_user=Depends(require_role("org_admin", "super_admin")),

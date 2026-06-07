@@ -94,3 +94,5 @@ def set_rls_context(db, org_id: str | None, role: str | None):
     """
     db.execute(text(f"SET app.current_org_id = '{org_id or ''}'"))
     db.execute(text(f"SET app.current_user_role = '{role or ''}'"))
+    db.execute(text(f"SET app.current_org_id = '{org_id or ''}'"))
+    db.execute(text(f"SET app.current_user_role = '{role or ''}'"))

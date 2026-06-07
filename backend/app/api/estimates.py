@@ -26,17 +26,18 @@ class SubmitEstimatesRequest(BaseModel):
     estimates: List[EstimateInput]
 
 @router.get("/{site_id}")
-def get_site_estimates(site_id: uuid.UUID, current_user=Depends(require_role("manager")), db: Session = Depends(get_db)):
+def get_site_estimates(site_id: uuid.UUID, current_user=Depends(require_role("manager", "org_admin")), db: Session = Depends(get_db)):
     """Get all Schedule B items for the site and the manager's current estimates."""
-    assignment = db.query(SiteManagerAssignment).filter(
-        SiteManagerAssignment.site_id == site_id,
-        SiteManagerAssignment.user_id == current_user.id,
-        SiteManagerAssignment.is_active == True,
-        SiteManagerAssignment.org_id == current_user.org_id
-    ).first()
-    
-    if not assignment:
-        raise HTTPException(status_code=403, detail="Not assigned to this site.")
+    if current_user.role.value == "manager":
+        assignment = db.query(SiteManagerAssignment).filter(
+            SiteManagerAssignment.site_id == site_id,
+            SiteManagerAssignment.user_id == current_user.id,
+            SiteManagerAssignment.is_active == True,
+            SiteManagerAssignment.org_id == current_user.org_id
+        ).first()
+        
+        if not assignment:
+            raise HTTPException(status_code=403, detail="Not assigned to this site.")
         
     site = db.query(Site).filter(Site.id == site_id).first()
     if not site:
@@ -70,17 +71,18 @@ def get_site_estimates(site_id: uuid.UUID, current_user=Depends(require_role("ma
     }
 
 @router.put("/{site_id}")
-def submit_site_estimates(site_id: uuid.UUID, body: SubmitEstimatesRequest, current_user=Depends(require_role("manager")), db: Session = Depends(get_db)):
+def submit_site_estimates(site_id: uuid.UUID, body: SubmitEstimatesRequest, current_user=Depends(require_role("manager", "org_admin")), db: Session = Depends(get_db)):
     """Submit updated estimates for a site. Triggers shortage alerts if necessary."""
-    assignment = db.query(SiteManagerAssignment).filter(
-        SiteManagerAssignment.site_id == site_id,
-        SiteManagerAssignment.user_id == current_user.id,
-        SiteManagerAssignment.is_active == True,
-        SiteManagerAssignment.org_id == current_user.org_id
-    ).first()
-    
-    if not assignment:
-        raise HTTPException(status_code=403, detail="Not assigned to this site.")
+    if current_user.role.value == "manager":
+        assignment = db.query(SiteManagerAssignment).filter(
+            SiteManagerAssignment.site_id == site_id,
+            SiteManagerAssignment.user_id == current_user.id,
+            SiteManagerAssignment.is_active == True,
+            SiteManagerAssignment.org_id == current_user.org_id
+        ).first()
+        
+        if not assignment:
+            raise HTTPException(status_code=403, detail="Not assigned to this site.")
         
     site = db.query(Site).filter(Site.id == site_id).first()
     if site.is_locked or site.status.value in ["completed", "pending_verification"]:

@@ -59,6 +59,35 @@ def remove_manager(site_id: uuid.UUID, user_id: uuid.UUID,
     return {"message": "Manager removed from site."}
 
 
+@router.get("")
+def list_sites(current_user=Depends(require_role("super_admin", "org_admin")), db: Session = Depends(get_db)):
+    """Admin gets all sites for the organization."""
+    from app.models.release_number import ReleaseNumber
+    from app.models.purchase_order import PurchaseOrder
+    
+    # Get all sites for org
+    sites = db.query(Site).filter(Site.org_id == current_user.org_id).all()
+    
+    result = []
+    for s in sites:
+        release = db.query(ReleaseNumber).filter(ReleaseNumber.id == s.release_id).first()
+        po = db.query(PurchaseOrder).filter(PurchaseOrder.id == release.po_id).first() if release else None
+        
+        result.append({
+            "id": str(s.id),
+            "site_no": s.site_no,
+            "status": s.status.value,
+            "location": s.location,
+            "area": s.area,
+            "is_locked": s.is_locked,
+            "po_number": po.po_number if po else "Unknown",
+            "po_id": str(po.id) if po else None,
+            "release_no": release.release_no if release else "Unknown"
+        })
+    return result
+
+
+
 @router.get("/my-sites")
 def get_my_sites(current_user=Depends(require_role("manager")), db: Session = Depends(get_db)):
     """Manager gets all sites assigned to them."""

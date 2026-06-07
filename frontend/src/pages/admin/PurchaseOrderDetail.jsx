@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import Layout from '../../components/layout/Layout'
 import api from '../../api/client'
 
-export default function AdminContractDetail() {
+export default function PurchaseOrderDetail() {
   const { id } = useParams()
   const [po, setPo] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -18,8 +18,8 @@ export default function AdminContractDetail() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
   // Forms
-  const [releaseForm, setReleaseForm] = useState({ release_number: '', description: '' })
-  const [siteForm, setSiteForm] = useState({ site_id: '', release_id: '', area: '', status: 'active' })
+  const [releaseForm, setReleaseForm] = useState({ release_no: '', description: '' })
+  const [siteForm, setSiteForm] = useState({ site_no: '', release_id: '', area: '', status: 'active' })
   const [csvFile, setCsvFile] = useState(null)
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function AdminContractDetail() {
     try {
       await api.post(`/api/contracts/${id}/releases`, releaseForm)
       setIsReleaseModalOpen(false)
-      setReleaseForm({ release_number: '', description: '' })
+      setReleaseForm({ release_no: '', description: '' })
       fetchContract()
     } catch (err) {
       alert(err.response?.data?.detail || 'Error creating release')
@@ -54,12 +54,11 @@ export default function AdminContractDetail() {
     e.preventDefault()
     try {
       await api.post(`/api/contracts/${id}/releases/${siteForm.release_id}/sites`, {
-        site_id: siteForm.site_id,
-        area: siteForm.area || null,
-        status: siteForm.status
+        site_no: siteForm.site_no,
+        area: siteForm.area || null
       })
       setIsSiteModalOpen(false)
-      setSiteForm({ site_id: '', release_id: '', area: '', status: 'active' })
+      setSiteForm({ site_no: '', release_id: '', area: '', status: 'active' })
       fetchContract()
     } catch (err) {
       alert(err.response?.data?.detail || 'Error creating site')
@@ -93,7 +92,7 @@ export default function AdminContractDetail() {
       <div className="p-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link to="/admin/contracts" className="text-blue-600 hover:underline text-sm mb-4 inline-block">&larr; Back to Contracts</Link>
+          <Link to="/admin/purchase-orders" className="text-blue-600 hover:underline text-sm mb-4 inline-block">&larr; Back to Purchase Orders</Link>
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">{po.po_number}</h1>
@@ -132,16 +131,16 @@ export default function AdminContractDetail() {
               </button>
             </div>
 
-            {po.releases?.length === 0 ? (
+            {po.release_numbers?.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-xl border border-gray-100 text-gray-500">
                 No releases added yet.
               </div>
             ) : (
               <div className="space-y-6">
-                {po.releases?.map(release => (
+                {po.release_numbers?.map(release => (
                   <div key={release.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                      <h3 className="font-bold text-gray-900">Release: {release.release_number}</h3>
+                      <h3 className="font-bold text-gray-900">Release: {release.release_no}</h3>
                       <span className="text-sm text-gray-500">{release.description}</span>
                     </div>
                     
@@ -161,7 +160,7 @@ export default function AdminContractDetail() {
                           <tbody className="divide-y divide-gray-50">
                             {release.sites.map(site => (
                               <tr key={site.id} className="hover:bg-gray-50/30">
-                                <td className="px-6 py-4 font-medium text-gray-900">{site.site_id}</td>
+                                <td className="px-6 py-4 font-medium text-gray-900">{site.site_no}</td>
                                 <td className="px-6 py-4 text-sm text-gray-500">{site.area || '-'}</td>
                                 <td className="px-6 py-4">
                                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${site.status === 'completed' ? 'bg-green-100 text-green-800' : site.status === 'pending_verification' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
@@ -236,7 +235,7 @@ export default function AdminContractDetail() {
             <form onSubmit={handleCreateRelease}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Release Number</label>
-                <input required type="text" value={releaseForm.release_number} onChange={e => setReleaseForm({...releaseForm, release_number: e.target.value})} className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2 border" />
+                <input required type="text" value={releaseForm.release_no} onChange={e => setReleaseForm({...releaseForm, release_no: e.target.value})} className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2 border" />
               </div>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -261,12 +260,12 @@ export default function AdminContractDetail() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Select Release</label>
                 <select required value={siteForm.release_id} onChange={e => setSiteForm({...siteForm, release_id: e.target.value})} className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2 border">
                   <option value="">-- Choose Release --</option>
-                  {po.releases?.map(r => <option key={r.id} value={r.id}>{r.release_number}</option>)}
+                  {po.release_numbers?.map(r => <option key={r.id} value={r.id}>{r.release_no}</option>)}
                 </select>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Site ID</label>
-                <input required type="text" value={siteForm.site_id} onChange={e => setSiteForm({...siteForm, site_id: e.target.value})} className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2 border" />
+                <input required type="text" value={siteForm.site_no} onChange={e => setSiteForm({...siteForm, site_no: e.target.value})} className="w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 px-4 py-2 border" />
               </div>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Area / Location (Optional)</label>

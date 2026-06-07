@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import Layout from '../../components/layout/Layout'
+import Layout from '../../components/Layout/Layout'
 import api from '../../api/client'
 
-export default function AdminContracts() {
+export default function PurchaseOrders() {
   const [contracts, setContracts] = useState([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -26,6 +26,7 @@ export default function AdminContracts() {
 
   const fetchContracts = async () => {
     try {
+      // Assuming backend still uses /api/contracts endpoint for POs for now
       const res = await api.get('/api/contracts')
       setContracts(res.data)
     } catch (err) {
@@ -53,7 +54,7 @@ export default function AdminContracts() {
       setFormData({ po_number: '', tender_id: '', description: '', order_value: '', start_date: '', end_date: '' })
       fetchContracts()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create contract')
+      setError(err.response?.data?.detail || 'Failed to create purchase order')
     } finally {
       setSubmitting(false)
     }
@@ -64,7 +65,7 @@ export default function AdminContracts() {
       <div className="p-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Contracts & POs</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Purchase Orders</h1>
             <p className="text-gray-500 mt-1">Manage all government purchase orders and releases.</p>
           </div>
           <button 
@@ -74,12 +75,12 @@ export default function AdminContracts() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            New Contract
+            New Purchase Order
           </button>
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-gray-400">Loading contracts...</div>
+          <div className="text-center py-20 text-gray-400">Loading purchase orders...</div>
         ) : contracts.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -87,13 +88,13 @@ export default function AdminContracts() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900">No contracts yet</h3>
+            <h3 className="text-xl font-semibold text-gray-900">No purchase orders yet</h3>
             <p className="text-gray-500 mt-2 max-w-md mx-auto">Get started by creating your first Purchase Order to begin managing sites and inventory.</p>
             <button 
               onClick={() => setIsModalOpen(true)}
               className="mt-6 text-blue-600 font-medium hover:text-blue-700"
             >
-              + Create your first contract
+              + Create your first purchase order
             </button>
           </div>
         ) : (
@@ -124,8 +125,9 @@ export default function AdminContracts() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
+                      {/* For now we will keep linking to the old contract detail page or we can make a PurchaseOrderDetail later */}
                       <Link 
-                        to={`/admin/contracts/${contract.id}`} 
+                        to={`/admin/purchase-orders/${contract.id}`} 
                         className="text-blue-600 hover:text-blue-900 font-medium text-sm transition-colors"
                       >
                         Manage &rarr;
@@ -144,7 +146,7 @@ export default function AdminContracts() {
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="text-lg font-bold text-gray-900">Create New Contract</h3>
+              <h3 className="text-lg font-bold text-gray-900">Create New Purchase Order</h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
@@ -178,7 +180,7 @@ export default function AdminContracts() {
               <div className="flex justify-end gap-3 mt-8">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
                 <button type="submit" disabled={submitting} className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                  {submitting ? 'Creating...' : 'Create Contract'}
+                  {submitting ? 'Creating...' : 'Create Purchase Order'}
                 </button>
               </div>
             </form>
